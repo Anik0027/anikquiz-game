@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Funny Quiz Game 😄</title>
+  <style>
+    :root{
+      --bg1:#0b1020;
+      --bg2:#141a33;
+      --card:#0f1630cc;
+      --text:#eaf0ff;
+      --muted:#aab6ffcc;
+      --yes:#38d39f;
+      --no:#ff5c7a;
+      --shadow: 0 20px 60px rgba(0,0,0,.45);
+    }
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 20% 10%, #2b3cff22, transparent 60%),
+        radial-gradient(1000px 700px at 80% 20%, #ff3b7a22, transparent 60%),
+        linear-gradient(160deg, var(--bg1), var(--bg2));
+      overflow:hidden;
+    }
+    .card{
+      width:min(820px, 92vw);
+      padding:26px 22px;
+      background:var(--card);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:22px;
+      box-shadow:var(--shadow);
+      backdrop-filter: blur(10px);
+      position:relative;
+    }
+    h1{
+      margin:0 0 6px;
+      font-size:clamp(24px, 4.8vw, 40px);
+    }
+    p{ margin:0 0 14px; color:var(--muted); }
+
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    input{
+      flex:1;
+      min-width:220px;
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.05);
+      color:var(--text);
+      outline:none;
+      font-size:16px;
+    }
+    input::placeholder{ color:#b7c0ff88; }
+
+    .btn{
+      border:none;
+      cursor:pointer;
+      font-size:16px;
+      padding:12px 18px;
+      border-radius:999px;
+      font-weight:800;
+      box-shadow: 0 12px 26px rgba(0,0,0,.35);
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 180ms ease, filter 180ms ease;
+    }
+    .btn:active{ transform: scale(.98); }
+    .primary{
+      background: linear-gradient(135deg, #45f7b5, var(--yes));
+      color:#052016;
+    }
+
+    .panel{ margin-top:14px; display:none; }
+    .panel.active{ display:block; }
+
+    .questionTitle{
+      margin:8px 0 6px;
+      font-size:clamp(20px, 4vw, 30px);
+    }
+
+    .arena{
+      position:relative;
+      height:240px;
+      border-radius:18px;
+      border:1px dashed rgba(255,255,255,.12);
+      background: rgba(255,255,255,.03);
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin-top:10px;
+    }
+
+    .yes{
+      background: linear-gradient(135deg, #45f7b5, var(--yes));
+      color:#052016;
+    }
+    .no{
+      position:absolute;
+      left:50%;
+      top:55%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, #ff7a92, var(--no));
+      color:#2b0010;
+      will-change: left, top, transform;
+      touch-action: manipulation;
+    }
+
+    /* BOUNCY dodge animation (graphical move) */
+    @keyframes bouncyDodge {
+      0%   { left: var(--sx); top: var(--sy); transform: rotate(var(--sr)) scale(1); }
+      55%  { left: calc(var(--ex) + var(--ox)); top: calc(var(--ey) + var(--oy)); transform: rotate(var(--er)) scale(1.10); }
+      78%  { left: calc(var(--ex) - (var(--ox) * 0.45)); top: calc(var(--ey) - (var(--oy) * 0.45)); transform: rotate(calc(var(--er) * 0.6)) scale(0.98); }
+      92%  { left: calc(var(--ex) + (var(--ox) * 0.18)); top: calc(var(--ey) + (var(--oy) * 0.18)); transform: rotate(calc(var(--er) * 0.85)) scale(1.02); }
+      100% { left: var(--ex); top: var(--ey); transform: rotate(var(--er)) scale(1); }
+    }
+    .dodge{
+      animation: bouncyDodge 520ms cubic-bezier(.2,.9,.2,1) both;
+    }
+
+    .hud{
+      margin-top:12px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      color:#c8d2ffbb;
+      font-size:14px;
+    }
+
+    /* Meme-like graphical animation canvas */
+    .memeStage{
+      margin-top:14px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.10);
+      background: radial-gradient(900px 300px at 50% 0%, #ff4b7d22, transparent 60%),
+                  rgba(255,255,255,.03);
+      height:300px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .burstText{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%);
+      font-weight:900;
+      font-size:clamp(22px, 4.5vw, 44px);
+      text-align:center;
+      text-shadow: 0 0 14px rgba(255,100,160,.55), 0 0 34px rgba(255,100,160,.35);
+      animation: popIn 700ms ease both;
+      line-height:1.1;
+    }
+    @keyframes popIn{
+      from{ opacity:0; transform:translate(-50%,-45%) scale(.96); }
+      to{ opacity:1; transform:translate(-50%,-50%) scale(1); }
+    }
+
+    /* Floating hearts */
+    .heart{
+      position:absolute;
+      width:14px;
+      height:14px;
+      transform: rotate(45deg);
+      background: #ff4b7d;
+      opacity:.9;
+      pointer-events:none;
+      filter: drop-shadow(0 10px 20px rgba(255,75,125,.35));
+      animation: floatUp 2.2s ease-in forwards;
+    }
+    .heart::before,
+    .heart::after{
+      content:"";
+      position:absolute;
+      width:14px;
+      height:14px;
+      background:#ff4b7d;
+      border-radius:50%;
+    }
+    .heart::before{ left:-7px; top:0; }
+    .heart::after{ left:0; top:-7px; }
+
+    @keyframes floatUp{
+      0%   { transform: translate(0,0) rotate(45deg) scale(1); opacity:.9; }
+      100% { transform: translate(var(--dx), -260px) rotate(45deg) scale(1.4); opacity:0; }
+    }
+
+    /* Confetti dots (simple graphics) */
+    .dot{
+      position:absolute;
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      opacity:.95;
+      animation: dotFly 1.2s ease-out forwards;
+    }
+    @keyframes dotFly{
+      0%{ transform: translate(0,0) scale(1); opacity:1; }
+      100%{ transform: translate(var(--dx), var(--dy)) scale(.7); opacity:0; }
+    }
+
+    .footer{
+      margin-top:10px;
+      font-size:12px;
+      opacity:.55;
+      text-align:center;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <div class="panel active" id="startPanel">
+      <h1>মজার কুইজ গেম 😄</h1>
+      <p>নাম দাও, তারপর কয়েকটা মজার প্রশ্ন আসবে। “No” চাপতে গেলে ওটা ডজ করবে 😅</p>
+      <div class="row">
+        <input id="nameInput" placeholder="তোমার নাম লিখো (যেমন: Anik / Arafat)" />
+        <button class="btn primary" id="startBtn">Start</button>
+      </div>
+      <div class="footer">Tip: মোবাইলেও কাজ করবে ✅</div>
+    </div>
+
+    <div class="panel" id="gamePanel">
+      <div class="hud">
+        <div>Player: <b id="playerName">—</b></div>
+        <div>Question: <b id="qIndex">1</b>/<span id="qTotal">—</span></div>
+        <div>Score: <b id="score">0</b></div>
+      </div>
+
+      <div class="questionTitle" id="questionText">—</div>
+      <p id="subText">“No” চাপতে গেলে ওটা পালাবে 😆</p>
+
+      <div class="arena" id="arena">
+        <button class="btn yes" id="yesBtn">Yes</button>
+        <button class="btn no"  id="noBtn">No</button>
+      </div>
+    </div>
+
+    <div class="panel" id="endPanel">
+      <h1 id="endTitle">Result 😄</h1>
+      <p id="endDesc">—</p>
+
+      <div class="memeStage" id="memeStage">
+        <!-- Graphics go here -->
+      </div>
+
+      <div class="row" style="margin-top:14px;">
+        <button class="btn primary" id="playAgainBtn">Play Again</button>
+      </div>
+      <div class="footer">Made with love 💖</div>
+    </div>
+  </div>
+
+  <script>
+    // Questions (funny)
+    const QUESTIONS = [
+      "তুমি কি একটু পাগলি টাইপ? 😜",
+      "তুমি কি Anik-এর bestie? 😄",
+      "তোমার হাসি কি সবচেয়ে কিউট? 😅",
+      "তুমি কি আজকে একটু দুষ্টুমি করবা? 😈",
+      "তুমি কি মজা করতে ভালোবাসো? 😆"
+    ];
+
+    const startPanel = document.getElementById("startPanel");
+    const gamePanel  = document.getElementById("gamePanel");
+    const endPanel   = document.getElementById("endPanel");
+
+    const nameInput  = document.getElementById("nameInput");
+    const startBtn   = document.getElementById("startBtn");
+
+    const playerName = document.getElementById("playerName");
+    const qIndexEl   = document.getElementById("qIndex");
+    const qTotalEl   = document.getElementById("qTotal");
+    const scoreEl    = document.getElementById("score");
+
+    const questionText = document.getElementById("questionText");
+    const arena = document.getElementById("arena");
+    const yesBtn = document.getElementById("yesBtn");
+    const noBtn  = document.getElementById("noBtn");
+
+    const endTitle = document.getElementById("endTitle");
+    const endDesc  = document.getElementById("endDesc");
+    const memeStage = document.getElementById("memeStage");
+    const playAgainBtn = document.getElementById("playAgainBtn");
+
+    let idx = 0;
+    let score = 0;
+    let dodging = false;
+
+    qTotalEl.textContent = QUESTIONS.length;
+
+    function show(panel){
+      [startPanel, gamePanel, endPanel].forEach(p => p.classList.remove("active"));
+      panel.classList.add("active");
+    }
+
+    function startGame(){
+      const nm = (nameInput.value || "").trim() || "Player";
+      playerName.textContent = nm;
+      idx = 0;
+      score = 0;
+      scoreEl.textContent = score;
+      qIndexEl.textContent = 1;
+      questionText.textContent = QUESTIONS[idx];
+      show(gamePanel);
+
+      // Place No and do a little alive move
+      setTimeout(() => {
+        placeNoCenter();
+        bouncyDodge();
+      }, 120);
+    }
+
+    function placeNoCenter(){
+      const a = arena.getBoundingClientRect();
+      const b = noBtn.getBoundingClientRect();
+      noBtn.style.left = (a.width/2 - b.width/2) + "px";
+      noBtn.style.top  = (a.height/2 - b.height/2) + "px";
+      noBtn.style.transform = "rotate(0deg)";
+    }
+
+    function currentPos(){
+      const a = arena.getBoundingClientRect();
+      const b = noBtn.getBoundingClientRect();
+      return { x: b.left - a.left, y: b.top - a.top };
+    }
+
+    function randomTarget(){
+      const a = arena.getBoundingClientRect();
+      const b = noBtn.getBoundingClientRect();
+      const pad = 14;
+      const maxX = a.width - b.width - pad*2;
+      const maxY = a.height - b.height - pad*2;
+      return {
+        x: pad + Math.random() * Math.max(0, maxX),
+        y: pad + Math.random() * Math.max(0, maxY)
+      };
+    }
+
+    function bouncyDodge(){
+      if (dodging) return;
+      dodging = true;
+
+      // force px coords
+      const cur = currentPos();
+      noBtn.style.left = cur.x + "px";
+      noBtn.style.top  = cur.y + "px";
+
+      const next = randomTarget();
+
+      const ox = (Math.random() * 34 + 16) * (Math.random() < 0.5 ? -1 : 1);
+      const oy = (Math.random() * 34 + 16) * (Math.random() < 0.5 ? -1 : 1);
+      const endRot = (Math.random() * 18 - 9).toFixed(1) + "deg";
+
+      noBtn.style.setProperty("--sx", cur.x + "px");
+      noBtn.style.setProperty("--sy", cur.y + "px");
+      noBtn.style.setProperty("--ex", next.x + "px");
+      noBtn.style.setProperty("--ey", next.y + "px");
+      noBtn.style.setProperty("--ox", ox.toFixed(0) + "px");
+      noBtn.style.setProperty("--oy", oy.toFixed(0) + "px");
+      noBtn.style.setProperty("--sr", "0deg");
+      noBtn.style.setProperty("--er", endRot);
+
+      noBtn.classList.remove("dodge");
+      void noBtn.offsetWidth; // reflow
+      noBtn.classList.add("dodge");
+
+      const end = () => {
+        noBtn.style.left = next.x + "px";
+        noBtn.style.top  = next.y + "px";
+        noBtn.style.transform = `rotate(${endRot})`;
+        noBtn.classList.remove("dodge");
+        noBtn.removeEventListener("animationend", end);
+        dodging = false;
+      };
+      noBtn.addEventListener("animationend", end);
+    }
+
+    function nextQuestion(){
+      idx++;
+      if(idx >= QUESTIONS.length){
+        finish();
+        return;
+      }
+      qIndexEl.textContent = (idx + 1).toString();
+      questionText.textContent = QUESTIONS[idx];
+
+      // Make "No" dodge once each new question for fun
+      setTimeout(bouncyDodge, 120);
+    }
+
+    function finish(){
+      show(endPanel);
+      const nm = playerName.textContent || "Player";
+      endTitle.textContent = `Congrats, ${nm}! 😄`;
+      endDesc.textContent  = `তুমি মোট স্কোর পেয়েছো: ${score}/${QUESTIONS.length}. এখন মিমি-গ্রাফিকাল মোড চলছে 💖`;
+
+      runMemeGraphics(nm);
+    }
+
+    // Graphics: hearts + confetti dots + big message
+    function runMemeGraphics(nm){
+      memeStage.innerHTML = "";
+
+      const msg = document.createElement("div");
+      msg.className = "burstText";
+      msg.textContent = `Thats why you are ${nm} এর\nAniks pagli bestie 💖`;
+      memeStage.appendChild(msg);
+
+      // burst dots
+      for(let i=0;i<36;i++){
+        setTimeout(() => spawnDot(), i*20);
+      }
+      // hearts rain
+      const start = Date.now();
+      const timer = setInterval(() => {
+        spawnHeart();
+        if(Date.now() - start > 2400) clearInterval(timer);
+      }, 90);
+    }
+
+    function spawnHeart(){
+      const h = document.createElement("div");
+      h.className = "heart";
+      const rect = memeStage.getBoundingClientRect();
+
+      const x = Math.random() * rect.width;
+      const y = rect.height * (0.70 + Math.random() * 0.25);
+      const dx = (Math.random() * 240 - 120).toFixed(0) + "px";
+      const size = (10 + Math.random() * 12).toFixed(0);
+
+      h.style.left = x + "px";
+      h.style.top  = y + "px";
+      h.style.width = size + "px";
+      h.style.height= size + "px";
+      h.style.setProperty("--dx", dx);
+
+      memeStage.appendChild(h);
+      setTimeout(() => h.remove(), 2300);
+    }
+
+    function spawnDot(){
+      const d = document.createElement("div");
+      d.className = "dot";
+      const rect = memeStage.getBoundingClientRect();
+      const cx = rect.width/2;
+      const cy = rect.height/2;
+
+      d.style.left = (cx + (Math.random()*20-10)) + "px";
+      d.style.top  = (cy + (Math.random()*20-10)) + "px";
+
+      // random pastel-ish via HSL
+      const hue = Math.floor(Math.random()*360);
+      d.style.background = `hsl(${hue} 90% 65%)`;
+
+      const dx = (Math.random()*360 - 180).toFixed(0) + "px";
+      const dy = (Math.random()*260 - 160).toFixed(0) + "px";
+      d.style.setProperty("--dx", dx);
+      d.style.setProperty("--dy", dy);
+
+      memeStage.appendChild(d);
+      setTimeout(() => d.remove(), 1300);
+    }
+
+    // Events
+    startBtn.addEventListener("click", startGame);
+    nameInput.addEventListener("keydown", (e) => {
+      if(e.key === "Enter") startGame();
+    });
+
+    yesBtn.addEventListener("click", () => {
+      score++;
+      scoreEl.textContent = score;
+
+      // Light playful "criticize" vibe but not harsh
+      questionText.textContent = "Hehe 😆 পাগলি ধরা খাইছো!";
+      setTimeout(nextQuestion, 650);
+    });
+
+    // "No" never lets progress
+    ["pointerenter", "pointerdown", "mouseenter", "touchstart", "click"].forEach(evt => {
+      noBtn.addEventListener(evt, (e) => {
+        e.preventDefault();
+        bouncyDodge();
+      }, { passive:false });
+    });
+
+    playAgainBtn.addEventListener("click", () => {
+      show(startPanel);
+      memeStage.innerHTML = "";
+    });
+  </script>
+</body>
+</html>
